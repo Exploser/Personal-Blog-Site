@@ -44,12 +44,20 @@ app.post('/login', async (req, res) => {
 
 app.get('/profile', (req, res) => {
     const { token } = req.cookies;
-    jwt.verify(token, secret, {}, (err, info) => {
-        if (err) throw err;
-        res.json(info);
-    });
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
 
-    res.json(req.cookies);
+    jwt.verify(token, secret, {}, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Failed to authenticate token' });
+        }
+        res.json(decoded);
+    });
+});
+
+app.post('/logout', (req, res) => {
+    res.cookie('token', '').json('ok');
 });
 
 app.listen(4000);
