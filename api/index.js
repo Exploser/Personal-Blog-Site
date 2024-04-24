@@ -6,6 +6,10 @@ const bcrypt = require('bcryptjs');
 const UserModel = require('./models/User');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');
+const multer = require('multer');
+const uploadMiddleware = multer({ dest: 'uploads/' });
+const fs = require('fs');
+const PostModel = require('./models/Post');
 
 const salt = bcrypt.genSaltSync(10);
 const secret = '65tgrdt546sxzyhy7u6453w'; //Change this to a genSalt 
@@ -61,6 +65,41 @@ app.get('/profile', (req, res) => {
 
 app.post('/logout', (req, res) => {
     res.cookie('token', '').json('ok');
+});
+
+app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'File must be uploaded' });
+    }
+    if (!req.body.title || !req.body.description || !req.body.content) {
+        return res.status(400).json({ error: 'All post fields must be filled' });
+    }
+
+    const { originalname, path } = req.file;
+
+    if (!originalname || !originalname.includes('.')) {
+        return res.status(400).json({ error: 'Invalid file name' });
+    }
+    const parts = originalname.split('.');
+    const ext = parts.pop(); // Handles names like 'my.file.name.jpg'
+    const newPath = path + '.' + ext;
+
+    try {
+        fs.renameSync(path, newPath);
+
+        const { title, description, content } = req.body;
+        const postDoc = await PostModel.create({
+            title,
+            description,
+            content,
+            cover: newPath,
+        });
+
+        res.json(postDoc);
+    } catch (error) {
+        return res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
 });
 
 app.listen(4000);
