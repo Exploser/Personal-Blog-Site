@@ -16,7 +16,6 @@
     "JWT_SECRET": "@jwt_secret",
     "MONGO_URI": "@mongo_uri",
     "ALLOWED_ORIGINS": "@allowed_origins"
-  },
-  "regions": ["all"]
+  }
 }
 
