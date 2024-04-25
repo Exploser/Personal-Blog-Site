@@ -19,8 +19,7 @@ export default function PostPage() {
           setPostInfo(postInfo);
         });
       });
-  }, []);
-
+  }, [id]);
 
   if (!postInfo) return '';
 
@@ -40,7 +39,7 @@ export default function PostPage() {
         </div>
       )}
       <div className="image">
-        <img src={`${apiUrl}${postInfo.cover}`} alt='Blog Image' />
+        <img src={`${apiUrl}${postInfo.cover}`} alt='Big Blog' />
       </div>
       <div dangerouslySetInnerHTML={{ __html: postInfo.content }} />
     </div>
