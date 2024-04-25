@@ -52,6 +52,11 @@ div.post div.texts h2 {
   font-size: 2rem;
 }
 
+div.post div.texts a {
+  color: inherit;
+  text-decoration: none;
+}
+
 div.post p.info {
   margin: 6px 0;
   color: #888;
