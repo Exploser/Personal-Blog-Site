@@ -13,7 +13,7 @@ img {
 
 main {
   padding: 10px;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -42,9 +42,16 @@ header nav {
 
 div.post {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  justify-items: center;
+  grid-template-columns: 1fr;
   gap: 20px;
   margin-bottom: 30px;
+}
+
+@media screen and (min-width: 600px) {
+  div.post {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
 }
 
 div.post div.texts h2 {
@@ -101,5 +108,46 @@ button {
 
 form.login h1,
 form.register h1 {
+  text-align: center;
+}
+
+div.post-page div.image {
+  max-height: 50vh;
+  display: flex;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+}
+
+div.post-page div.image img {
+  object-fit: cover;
+  object-position: center center;
+}
+
+div.post-page a {
+  color: #333;
+  text-decoration: underline;
+}
+
+div.post-page h1 {
+  text-align: center;
+}
+
+div.post-page time {
+  text-align: center;
+  margin: 10px 0 5px;
+  display: block;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+div.post-page div.author {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+div.post-page p {
   text-align: center;
 }

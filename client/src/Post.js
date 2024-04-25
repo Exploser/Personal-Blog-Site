@@ -17,7 +17,7 @@ export default function Post({ _id, title, description, cover, content, createdA
           <a className='author'>{author.username}</a>
           <time>{formatISO9075(new Date(createdAt))}</time>
         </p>
-        <p className='description'> lorem20 </p>
+        <p className='description'>{description}</p>
       </div>
     </div>
   );
