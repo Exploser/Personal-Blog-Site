@@ -226,4 +226,8 @@ app.get('/post/:id', async (req, res) => {
     res.json(postDoc);
 });
 
-app.listen(process.env.API_PORT);
+if (process.env.API_PORT) {
+    app.listen(process.env.API_PORT);
+}
+
+module.exports = app;
