@@ -2,43 +2,66 @@ import { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { UserContext } from "./UserContext";
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export default function Header() {
   const { setUserInfo, userInfo } = useContext(UserContext);
 
   useEffect(() => {
-    fetch('http://localhost:4000/profile', {
-      credentials: 'include',
-    }).then(response => {
-      response.json().then(userInfo => {
-        setUserInfo(userInfo);
-      });
-    });
+    let isMounted = true; // Flag to check the mounted status
 
-  }, []);
+    fetch(`${apiUrl}profile`, {
+      credentials: 'include',
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Network response was not ok.');
+      })
+      .then(userInfo => {
+        if (isMounted) {
+          setUserInfo(userInfo);
+        }
+      })
+      .catch(error => console.error('Error fetching profile:', error));
+
+    return () => {
+      isMounted = false; // Set it to false when the component unmounts
+    };
+
+  }, [setUserInfo]); // Dependency array to ensure effect runs only if setUserInfo changes
 
   function logout() {
-    fetch('http://localhost:4000/logout', {
+    fetch(`${apiUrl}logout`, {
       credentials: 'include',
       method: 'POST',
-    });
-    setUserInfo(null);
+    })
+      .then(response => {
+        if (response.ok) {
+          setUserInfo(null);
+        } else {
+          throw new Error('Logout failed');
+        }
+      })
+      .catch(error => console.error('Error during logout:', error));
   }
+
   const username = userInfo?.username;
 
   return (
     <header>
-      <Link to='/' className='logo'>Exploser's Blog</Link>
+      <Link to="/" className="logo">Exploser's Blog</Link>
       <nav>
-        {username && (
+        {username ? (
           <>
             <Link to="/create">Create new post</Link>
-            <a onClick={logout}>Logout</a>
+            <a href="#logout" onClick={logout}>Logout</a> {/* Improved accessibility by adding href */}
           </>
-        )}
-        {!username && (
+        ) : (
           <>
-            <Link to='/login'>Login</Link>
-            <Link to='/register'>Register</Link>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
           </>
         )}
       </nav>

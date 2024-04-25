@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -10,16 +11,47 @@ const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/' });
 const fs = require('fs');
 const PostModel = require('./models/Post');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
+const compression = require('compression');
 
 const salt = bcrypt.genSaltSync(10);
-const secret = '65tgrdt546sxzyhy7u6453w'; //Change this to a genSalt 
+const secret = process.env.JWT_SECRET;
 
-app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+
+const corsOptions = {
+    credentials: true,
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl requests)
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    }
+};
+
+app.use(cors(corsOptions))
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'))
+app.use(helmet());
+app.use(limiter);
+app.use(morgan('combined')); // Use 'combined' for detailed log format
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
+app.use(compression());
 
-mongoose.connect('mongodb+srv://asinghthakur:RjCByiEWWt9kF6c7@cluster0.pqh5skt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+mongoose.connect(process.env.MONGO_URI);
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -31,6 +63,9 @@ app.post('/register', async (req, res) => {
     }
 });
 
+app.get('/login', (req, res) => {
+    res.status(405).json({ error: 'Method not allowed' });
+});
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -38,17 +73,26 @@ app.post('/login', async (req, res) => {
     const passOk = bcrypt.compareSync(password, userDoc.password);
 
     if (passOk) {
-        jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-            if (err) throw err;
-            res.cookie('token', token).json({
-                id: userDoc._id,
-                username,
+        if (!process.env.JWT_SECRET) {
+            console.error('JWT secret is not set.');
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        jwt.sign({ username, id: userDoc._id }, process.env.JWT_SECRET, {}, (err, token) => {
+            if (err) {
+                console.error('Error signing token:', err);
+                return res.status(500).json({ error: 'Error generating token' });
+            }
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production'
             });
+            res.json({ id: userDoc._id, username });
         });
     } else {
-        res.status(400).json('Wrong Credentails');
+        res.status(400).json('Wrong Credentials');
     }
 });
+
 
 app.get('/profile', (req, res) => {
     const { token } = req.cookies;
@@ -182,4 +226,4 @@ app.get('/post/:id', async (req, res) => {
     res.json(postDoc);
 });
 
-app.listen(4000);
+app.listen(process.env.API_PORT);

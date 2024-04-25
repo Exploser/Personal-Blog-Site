@@ -2,6 +2,8 @@ import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../UserContext";
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -10,20 +12,27 @@ export default function LoginPage() {
 
   async function login(ev) {
     ev.preventDefault();
-    const response = await fetch('http://localhost:4000/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
 
-    if (response.ok) {
-      response.json().then(userInfo => {
+    try {
+      const response = await fetch(`${apiUrl}login`, {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const userInfo = await response.json();
         setUserInfo(userInfo);
         setRedirect(true);
-      })
-    } else {
-      alert("Wrong Crediantials");
+      } else {
+        // Handle HTTP errors e.g., 401, 403, etc.
+        alert("Wrong Credentials"); // Correct spelling error in alert
+      }
+    } catch (error) {
+      // Handle network errors
+      console.error('Login failed:', error);
+      alert('Failed to connect. Please try again later.');
     }
   }
 

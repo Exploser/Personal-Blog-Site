@@ -3,6 +3,8 @@ import Editor from "../Editor";
 import { Navigate, useParams } from "react-router-dom";
 import 'react-quill/dist/quill.snow.css';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export default function EditPost() {
   const { id } = useParams();
   const [title, setTitle] = useState('');
@@ -13,7 +15,7 @@ export default function EditPost() {
   const [redirect, setRedirect] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:4000/post/' + id)
+    fetch(`${apiUrl}post/${id}`)
       .then(response => {
         response.json().then(postInfo => {
           setTitle(postInfo.title);
@@ -35,7 +37,7 @@ export default function EditPost() {
     if (files) {
       formData.append('file', files);  // Include the file only if a new file has been selected
     }
-    const response = await fetch('http://localhost:4000/post', {
+    const response = await fetch(`${apiUrl}post`, {
       method: 'PUT',
       body: formData,
       credentials: 'include'
@@ -80,7 +82,7 @@ export default function EditPost() {
       <div className="edit-image">
         <div className="edit-image-current">
           Current Image
-          {cover && <img src={'http://localhost:4000/' + cover}
+          {cover && <img src={`${apiUrl}` + cover}
             alt="Cover"
           />}
         </div>
