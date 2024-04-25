@@ -15,6 +15,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const compression = require('compression');
+const admin = require('firebase-admin');
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
