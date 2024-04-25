@@ -4,11 +4,9 @@
     {
       "src": "client/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "client/build" }
-    },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+      "config": {
+        "distDir": "client/build"
+      }
     }
   ],
   "routes": [
@@ -18,17 +16,14 @@
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "/api/uploads/$1"
+      "dest": "/uploads/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/client/build/$1"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
+      "src": "/",
       "dest": "/client/build/index.html"
     }
   ]
