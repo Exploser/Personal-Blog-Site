@@ -24,7 +24,8 @@ const limiter = rateLimit({
     max: 100 // limit each IP to 100 requests per windowMs
 });
 
-const allowedOrigins = 'https://personal-blog-site-puce.vercel.app/';
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+
 const corsOptions = {
     credentials: true,
     origin: function(origin, callback) {
@@ -225,5 +226,8 @@ app.get('/post/:id', async (req, res) => {
     res.json(postDoc);
 });
 
+if (process.env.API_PORT) {
+    app.listen(process.env.API_PORT);
+}
 
 module.exports = app;
