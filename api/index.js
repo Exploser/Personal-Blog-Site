@@ -17,6 +17,7 @@ const secret = '65tgrdt546sxzyhy7u6453w'; //Change this to a genSalt
 app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
 app.use(express.json());
 app.use(cookieParser());
+app.use('/uploads', express.static(__dirname + '/uploads'))
 
 mongoose.connect('mongodb+srv://asinghthakur:RjCByiEWWt9kF6c7@cluster0.pqh5skt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
 
@@ -88,18 +89,35 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     try {
         fs.renameSync(path, newPath);
 
-        const { title, description, content } = req.body;
-        const postDoc = await PostModel.create({
-            title,
-            description,
-            content,
-            cover: newPath,
-        });
+        const { token } = req.cookies;
 
-        res.json(postDoc);
+        jwt.verify(token, secret, {}, async (err, info) => {
+            if (err) {
+                return res.status(401).json({ error: 'Failed to authenticate token' });
+            }
+            const { title, description, content } = req.body;
+            const postDoc = await PostModel.create({
+                title,
+                description,
+                content,
+                cover: newPath,
+                author: info.id,
+            });
+            res.json(postDoc);
+        });
     } catch (error) {
         return res.status(500).json({ error: 'Internal server error', details: error.message });
     }
+});
+
+app.get('/post', async (req, res) => {
+    res.json(
+        await PostModel.find()
+            .populate('author', ['username'])
+            .sort({ createdAt: -1 })
+            .limit(20)
+    );
+
 });
 
 app.listen(4000);
