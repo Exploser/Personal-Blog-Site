@@ -151,3 +151,48 @@ div.post-page div.author {
 div.post-page p {
   text-align: center;
 }
+
+div.edit-row {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+a.edit-btn {
+  background-color: #333;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 15px 10px;
+  border-radius: 5px;
+}
+
+a svg {
+  height: 25px;
+}
+
+div.edit-image-current {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  img {
+    object-fit: contain;
+    margin: 10px;
+    min-width: 100%;
+  }
+}
+
+div.edit-image-new {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  img {
+    object-fit: contain;
+    margin: 10px;
+    min-width: 100%;
+  }
+}

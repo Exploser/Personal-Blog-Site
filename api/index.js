@@ -110,6 +110,62 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     }
 });
 
+app.put('/post/', uploadMiddleware.single('file'), async (req, res) => {
+    let newPath;
+
+    if (req.file) {
+        const { originalname, path } = req.file;
+
+        if (!originalname || !originalname.includes('.')) {
+            return res.status(400).json({ error: 'Invalid file name' });
+        }
+        const parts = originalname.split('.');
+        const ext = parts.pop(); // Handles names like 'my.file.name.jpg'
+        newPath = path + '.' + ext;
+
+        try {
+            fs.renameSync(path, newPath);
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal server error', details: error.message });
+        }
+    }
+
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) {
+            return res.status(401).json({ error: 'Failed to authenticate token' });
+        }
+
+        const { title, description, content, id } = req.body;
+        const postDoc = await PostModel.findById(id);
+        if (!postDoc) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
+        if (!isAuthor) {
+            return res.status(403).json({ error: 'You are not the author' });
+        }
+
+        const updateData = {
+            title,
+            description,
+            content,
+            author: info.id
+        };
+        if (newPath) {
+            updateData.cover = newPath; // Only update cover if a new file has been uploaded
+        }
+
+        try {
+            await postDoc.updateOne(updateData);
+            res.json(postDoc);
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal server error', details: error.message });
+        }
+    });
+});
+
 app.get('/post', async (req, res) => {
     res.json(
         await PostModel.find()
