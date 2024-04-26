@@ -5,20 +5,29 @@ import { UserContext } from "../UserContext";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
+function convertToFirebaseUrl(storageUrl) {
+  const matches = storageUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/);
+  if (matches && matches.length === 3) {
+    const bucketName = matches[1];
+    const filePath = matches[2].replace(new RegExp("/", "g"), "%2F");
+    return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${filePath}?alt=media`;
+  }
+  return storageUrl; // return the original URL if it doesn't match the expected pattern
+}
+
 export default function PostPage() {
-
   const [postInfo, setPostInfo] = useState(null);
-  const { userInfo } = useContext(UserContext)
-
+  const { userInfo } = useContext(UserContext);
   const { id } = useParams();
 
   useEffect(() => {
     fetch(`${apiUrl}post/${id}`)
-      .then(response => {
-        response.json().then(postInfo => {
-          setPostInfo(postInfo);
-        });
-      });
+      .then(response => response.json())
+      .then(postInfo => {
+        const convertedCover = convertToFirebaseUrl(postInfo.cover);
+        setPostInfo({ ...postInfo, cover: convertedCover });
+      })
+      .catch(error => console.error('Error fetching post:', error));
   }, [id]);
 
   if (!postInfo) return '';
@@ -39,10 +48,10 @@ export default function PostPage() {
         </div>
       )}
       <div className="image">
-        <img src={`${apiUrl}${postInfo.cover}`} alt='Big Blog' />
+        <img src={postInfo.cover} alt={`${postInfo.title} Cover`} />
       </div>
       <div dangerouslySetInnerHTML={{ __html: postInfo.content }} />
     </div>
-
   );
 }
+

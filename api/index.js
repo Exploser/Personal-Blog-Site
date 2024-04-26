@@ -15,6 +15,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const compression = require('compression');
+const admin = require('firebase-admin');
+const serviceAccount = require('./firebase.json');
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
@@ -22,6 +24,16 @@ const secret = process.env.JWT_SECRET;
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
+});
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "blogs-27e6d.appspot.com"
+});
+const bucket = admin.storage().bucket();
+const firebaseStorage = multer.memoryStorage();
+const upload = multer({
+    storage: multer.memoryStorage()
 });
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
@@ -41,7 +53,6 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'))
 app.use(helmet());
 app.use(limiter);
 app.use(morgan('combined')); // Use 'combined' for detailed log format
@@ -52,6 +63,8 @@ app.use((err, req, res, next) => {
 app.use(compression());
 
 mongoose.connect(process.env.MONGO_URI);
+
+app.get('/', (req, res) => res.send('Hello World!'));
 
 app.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
@@ -112,8 +125,8 @@ app.post('/logout', (req, res) => {
     res.cookie('token', '').json('ok');
 });
 
-app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
 
+app.post('/post', upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'File must be uploaded' });
     }
@@ -121,37 +134,42 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
         return res.status(400).json({ error: 'All post fields must be filled' });
     }
 
-    const { originalname, path } = req.file;
+    const { originalname, buffer } = req.file;
+    const blob = bucket.file(originalname);
+    const blobStream = blob.createWriteStream({
+        metadata: {
+            contentType: req.file.mimetype
+        }
+    });
 
-    if (!originalname || !originalname.includes('.')) {
-        return res.status(400).json({ error: 'Invalid file name' });
-    }
-    const parts = originalname.split('.');
-    const ext = parts.pop(); // Handles names like 'my.file.name.jpg'
-    const newPath = path + '.' + ext;
+    blobStream.on('error', err => res.status(500).json({ error: 'Failed to upload file', details: err.message }));
 
-    try {
-        fs.renameSync(path, newPath);
+    blobStream.on('finish', async () => {
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(blob.name)}`;
 
         const { token } = req.cookies;
-
-        jwt.verify(token, secret, {}, async (err, info) => {
+        jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
             if (err) {
                 return res.status(401).json({ error: 'Failed to authenticate token' });
             }
+
             const { title, description, content } = req.body;
-            const postDoc = await PostModel.create({
-                title,
-                description,
-                content,
-                cover: newPath,
-                author: info.id,
-            });
-            res.json(postDoc);
+            try {
+                const postDoc = await PostModel.create({
+                    title,
+                    description,
+                    content,
+                    cover: publicUrl,
+                    author: info.id,
+                });
+                res.json(postDoc);
+            } catch (error) {
+                res.status(500).json({ error: 'Internal server error', details: error.message });
+            }
         });
-    } catch (error) {
-        return res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
+    });
+
+    blobStream.end(buffer);
 });
 
 
@@ -204,6 +222,7 @@ app.put('/post/', upload.single('file'), async (req, res) => {
 
     stream.end(buffer);
 });
+
 
 app.get('/post', async (req, res) => {
     res.json(
