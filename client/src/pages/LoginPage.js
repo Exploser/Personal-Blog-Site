@@ -6,6 +6,7 @@ const apiUrl = process.env.REACT_APP_API_URL;
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirect, setRedirect] = useState(false);
   const { setUserInfo } = useContext(UserContext);
@@ -16,7 +17,6 @@ export default function LoginPage() {
     try {
       const response = await fetch(`${apiUrl}login`, {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
@@ -25,6 +25,7 @@ export default function LoginPage() {
         const userInfo = await response.json();
         setUserInfo(userInfo);
         setRedirect(true);
+
       } else {
         // Handle HTTP errors e.g., 401, 403, etc.
         alert("Wrong Credentials"); // Correct spelling error in alert
@@ -44,6 +45,11 @@ export default function LoginPage() {
       <h1>Login</h1>
       <input type="text"
         placeholder="Username"
+        value={username}
+        onChange={ev => setUsername(ev.target.value)} />
+
+      <input type="text"
+        placeholder="Email"
         value={username}
         onChange={ev => setUsername(ev.target.value)} />
 

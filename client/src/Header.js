@@ -51,7 +51,10 @@ export default function Header() {
 
   return (
     <header>
-      <Link to="/" className="logo">Exploser's Blog</Link>
+      <Link to="/" className="logo">
+        <img src="https://firebasestorage.googleapis.com/v0/b/blogs-27e6d.appspot.com/o/blogs-logo-smaller.png?alt=media&token=b3dbbb97-ed87-4edd-bf78-be620912a8f5" />
+        <p>Exploser's Blog</p>
+      </Link>
       <nav>
         {username ? (
           <>

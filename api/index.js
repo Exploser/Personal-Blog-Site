@@ -67,9 +67,9 @@ mongoose.connect(process.env.MONGO_URI);
 app.get('/', (req, res) => res.send('Hello World!'));
 
 app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
     try {
-        const userDoc = await UserModel.create({ username, password: bcrypt.hashSync(password, salt), });
+        const userDoc = await UserModel.create({ username, email, password: bcrypt.hashSync(password, salt), });
         res.json({ userDoc });
     } catch (e) {
         res.status(400).json(e);
