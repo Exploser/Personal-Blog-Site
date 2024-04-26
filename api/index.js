@@ -8,8 +8,6 @@ const UserModel = require('./models/User');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-const uploadMiddleware = multer({ dest: 'uploads/' });
-const fs = require('fs');
 const PostModel = require('./models/Post');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -31,7 +29,6 @@ admin.initializeApp({
     storageBucket: "blogs-27e6d.appspot.com"
 });
 const bucket = admin.storage().bucket();
-const firebaseStorage = multer.memoryStorage();
 const upload = multer({
     storage: multer.memoryStorage()
 });
@@ -125,7 +122,6 @@ app.post('/logout', (req, res) => {
     res.cookie('token', '').json('ok');
 });
 
-
 app.post('/post', upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'File must be uploaded' });
@@ -134,11 +130,11 @@ app.post('/post', upload.single('file'), async (req, res) => {
         return res.status(400).json({ error: 'All post fields must be filled' });
     }
 
-    const { originalname, buffer } = req.file;
+    const { originalname, buffer, mimetype } = req.file;
     const blob = bucket.file(originalname);
     const blobStream = blob.createWriteStream({
         metadata: {
-            contentType: req.file.mimetype
+            contentType: mimetype
         }
     });
 
@@ -171,7 +167,6 @@ app.post('/post', upload.single('file'), async (req, res) => {
 
     blobStream.end(buffer);
 });
-
 
 app.put('/post/', upload.single('file'), async (req, res) => {
     if (!req.file) {
