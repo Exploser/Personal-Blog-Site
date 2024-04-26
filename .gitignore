@@ -1,0 +1,6 @@
+.vercel
+*/.env
+
+# Environment variables
+.env
+.env.*

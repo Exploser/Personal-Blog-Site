@@ -1,5 +1,11 @@
 uploads/*
 
 firebase.*
+<<<<<<< HEAD
 
 .env
+=======
+# Environment variables
+.env
+.env.*
+>>>>>>> 8595418 (UI Improvements)

@@ -54,9 +54,9 @@ app.use(compression());
 mongoose.connect(process.env.MONGO_URI);
 
 app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
     try {
-        const userDoc = await UserModel.create({ username, password: bcrypt.hashSync(password, salt), });
+        const userDoc = await UserModel.create({ username, email, password: bcrypt.hashSync(password, salt), });
         res.json({ userDoc });
     } catch (e) {
         res.status(400).json(e);
@@ -154,60 +154,55 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     }
 });
 
-app.put('/post/', uploadMiddleware.single('file'), async (req, res) => {
-    let newPath;
 
-    if (req.file) {
-        const { originalname, path } = req.file;
-
-        if (!originalname || !originalname.includes('.')) {
-            return res.status(400).json({ error: 'Invalid file name' });
-        }
-        const parts = originalname.split('.');
-        const ext = parts.pop(); // Handles names like 'my.file.name.jpg'
-        newPath = path + '.' + ext;
-
-        try {
-            fs.renameSync(path, newPath);
-        } catch (error) {
-            return res.status(500).json({ error: 'Internal server error', details: error.message });
-        }
+app.put('/post/', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { token } = req.cookies;
-    jwt.verify(token, secret, {}, async (err, info) => {
-        if (err) {
-            return res.status(401).json({ error: 'Failed to authenticate token' });
+    const { originalname, buffer } = req.file;
+    const file = bucket.file(originalname);
+    const stream = file.createWriteStream({
+        metadata: {
+            contentType: req.file.mimetype
+        }
+    });
+
+    stream.on('error', error => {
+        console.error("Failed to upload file:", error);
+        return res.status(500).json({ error: 'Failed to upload file', details: error.message });
+    });
+
+    stream.on('finish', async () => {
+        await file.makePublic(); // Optionally make the file publicly accessible
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(file.name)}`;
+
+        const { title, description, content, id } = req.body; // Assuming these fields are needed for the update
+        if (!title || !description || !content) {
+            return res.status(400).json({ error: 'All post fields must be filled' });
         }
 
-        const { title, description, content, id } = req.body;
         const postDoc = await PostModel.findById(id);
         if (!postDoc) {
             return res.status(404).json({ error: 'Post not found' });
-        }
-
-        const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-        if (!isAuthor) {
-            return res.status(403).json({ error: 'You are not the author' });
         }
 
         const updateData = {
             title,
             description,
             content,
-            author: info.id
+            cover: publicUrl // Update the cover image URL
         };
-        if (newPath) {
-            updateData.cover = newPath; // Only update cover if a new file has been uploaded
-        }
 
         try {
             await postDoc.updateOne(updateData);
-            res.json(postDoc);
+            res.json({ message: 'Post updated', post: updateData });
         } catch (error) {
-            return res.status(500).json({ error: 'Internal server error', details: error.message });
+            res.status(500).json({ error: 'Internal server error', details: error.message });
         }
     });
+
+    stream.end(buffer);
 });
 
 app.get('/post', async (req, res) => {

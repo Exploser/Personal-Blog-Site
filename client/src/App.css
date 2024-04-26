@@ -20,6 +20,7 @@ main {
 header {
   display: flex;
   justify-content: space-between;
+  flex-direction: column;
   margin-top: 10px;
   margin-bottom: 50px;
   align-items: center;
@@ -28,11 +29,24 @@ header {
 header a {
   text-decoration: none;
   color: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 
 header a.logo {
   font-weight: bold;
   font-size: 1.4rem;
+}
+
+header a img {
+  max-height: 50px;
+  object-fit: contain;
+}
+
+header a p {
+  visibility: collapse;
 }
 
 header nav {
@@ -52,6 +66,15 @@ div.post {
   div.post {
     grid-template-columns: 0.9fr 1.1fr;
   }
+
+  header {
+    flex-direction: row;
+  }
+
+  header a p {
+    visibility: visible;
+  }
+
 }
 
 div.post div.texts h2 {
@@ -71,6 +94,7 @@ div.post p.info {
   font-weight: bold;
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 div.post p.info a.author {
