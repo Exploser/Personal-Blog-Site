@@ -4,3 +4,8 @@
 # Environment variables
 .env
 .env.*
+
+firebase.*
+*.json
+
+*/*/uploads
