@@ -26,6 +26,16 @@ export default function EditPost() {
       });
   }, [id]);
 
+  function convertToFirebaseUrl(storageUrl) {
+    const matches = storageUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/);
+    if (matches && matches.length === 3) {
+      const bucketName = matches[1];
+      const filePath = matches[2].replace(new RegExp("/", "g"), "%2F");
+      return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${filePath}?alt=media`;
+    }
+    return storageUrl; // return the original URL if it doesn't match the expected pattern
+  }
+
   async function updatePost(ev) {
     ev.preventDefault();
 
@@ -82,7 +92,7 @@ export default function EditPost() {
       <div className="edit-image">
         <div className="edit-image-current">
           Current Image
-          {cover && <img src={`${apiUrl}` + cover}
+          {cover && <img src={`${convertToFirebaseUrl(cover)}`}
             alt="Cover"
           />}
         </div>
