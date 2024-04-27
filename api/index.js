@@ -5,7 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const UserModel = require('./models/User');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const PostModel = require('./models/Post');
@@ -14,31 +14,24 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const compression = require('compression');
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase.json');
 
-const salt = bcrypt.genSaltSync(10);
-const secret = process.env.JWT_SECRET;
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-});
-
+// Initialize Firebase Admin with environment variable
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: "blogs-27e6d.appspot.com"
 });
 const bucket = admin.storage().bucket();
-const upload = multer({
-    storage: multer.memoryStorage()
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
+const salt = bcrypt.genSaltSync(10);
+const secret = process.env.JWT_SECRET;
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
 
 const corsOptions = {
     credentials: true,
     origin: function(origin, callback) {
-        if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
             var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
             return callback(new Error(msg), false);
@@ -47,19 +40,24 @@ const corsOptions = {
     }
 };
 
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
-app.use(limiter);
-app.use(morgan('combined')); // Use 'combined' for detailed log format
+app.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+}));
+app.use(morgan('combined'));
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
 });
 app.use(compression());
 
-mongoose.connect(process.env.MONGO_URI);
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('MongoDB connected successfully.'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
 app.get('/', (req, res) => res.send('Hello World!'));
 
