@@ -253,18 +253,3 @@ if (process.env.API_PORT) {
 }
 
 module.exports = app;
-
-
-});
-
-app.get('/post/:id', async (req, res) => {
-    const { id } = req.params;
-    const postDoc = await PostModel.findById(id).populate('author');
-    res.json(postDoc);
-});
-
-if (process.env.API_PORT) {
-    app.listen(process.env.API_PORT);
-}
-
-module.exports = app;
