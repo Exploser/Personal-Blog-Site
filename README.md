@@ -7,7 +7,6 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 This project is a personal blog platform built with React. It allows users to create, edit, and view blog posts, manage their user accounts, and interact through comments.
