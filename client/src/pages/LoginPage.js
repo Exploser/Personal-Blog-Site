@@ -19,6 +19,7 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ username, email, password })
       });
 
       if (response.ok) {
@@ -45,11 +46,6 @@ export default function LoginPage() {
       <h1>Login</h1>
       <input type="text"
         placeholder="Username"
-        value={username}
-        onChange={ev => setUsername(ev.target.value)} />
-
-      <input type="text"
-        placeholder="Email"
         value={username}
         onChange={ev => setUsername(ev.target.value)} />
 

@@ -75,29 +75,44 @@ app.get('/login', (req, res) => {
     res.status(405).json({ error: 'Method not allowed' });
 });
 
+
 app.post('/login', async (req, res) => {
+    console.log("Received login request:", req.body);
     const { username, password } = req.body;
+
     const userDoc = await UserModel.findOne({ username });
+    console.log("User document found:", userDoc);
+
+    if (!userDoc) {
+        console.log("No user found for username:", username);
+        return res.status(404).json({ error: 'User not found' });
+    }
+
     const passOk = bcrypt.compareSync(password, userDoc.password);
+    console.log("Password comparison result:", passOk);
 
     if (passOk) {
         if (!process.env.JWT_SECRET) {
             console.error('JWT secret is not set.');
             return res.status(500).json({ error: 'Internal server error' });
         }
+
         jwt.sign({ username, id: userDoc._id }, process.env.JWT_SECRET, {}, (err, token) => {
             if (err) {
                 console.error('Error signing token:', err);
                 return res.status(500).json({ error: 'Error generating token' });
             }
+
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production'
             });
+
             res.json({ id: userDoc._id, username });
         });
     } else {
-        res.status(400).json('Wrong Credentials');
+        console.log("Invalid credentials provided for user:", username);
+        res.status(400).json({ error: 'Wrong credentials' });
     }
 });
 
