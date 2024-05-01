@@ -1,4 +1,6 @@
-import ReactQuill from "react-quill";
+import React from 'react';
+import ReactQuill from 'react-quill';
+import DOMPurify from 'dompurify';
 
 export default function Editor({ value, onChange }) {
 
@@ -18,11 +20,15 @@ export default function Editor({ value, onChange }) {
     'list', 'bullet', 'indent',
     'link', 'image'
   ];
+
+  const sanitizedValue = DOMPurify.sanitize(value);
+
   return (
-    <ReactQuill value={value}
+    <ReactQuill
+      value={sanitizedValue}
       onChange={onChange}
       modules={modules}
-      formats={formats} />
-
+      formats={formats}
+    />
   );
 }

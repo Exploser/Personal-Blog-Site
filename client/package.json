@@ -1,5 +1,6 @@
 {
-  "name": "client",
+ react-scripts@5.0.1 requires postcss@^8.4.33 via a transitive dependency on css-loader@6.11.0
+react-scripts@5.0.1 requires postcss@^7.0.35 via a transitive dependency on resolve-url-loader@4.0.0 "name": "client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -7,11 +8,12 @@
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
     "date-fns": "^3.6.0",
+    "nth-check": "^2.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.22.3",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
