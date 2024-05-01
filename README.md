@@ -10,6 +10,7 @@
 
 ## Introduction
 This project is a personal blog platform built with React. It allows users to create, edit, and view blog posts, manage their user accounts, and interact through comments.
+   Check it out live at https://exploserblogs.com
 
 ## Technologies
 - **React**: Frontend library used for building the user interface.
