@@ -1,11 +1,6 @@
 import { formatISO9075 } from "date-fns";
 import { Link } from "react-router-dom";
 
-
-const firebaseUrl = process.env.REACT_APP_FIREBASE_URL;
-
-const firebaseExt = process.env.REACT_APP_FIREBASE_EXT;
-
 function convertToFirebaseUrl(storageUrl) {
   const matches = storageUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/);
   if (matches && matches.length === 3) {
