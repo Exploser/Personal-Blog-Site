@@ -1,6 +1,5 @@
 {
- react-scripts@5.0.1 requires postcss@^8.4.33 via a transitive dependency on css-loader@6.11.0
-react-scripts@5.0.1 requires postcss@^7.0.35 via a transitive dependency on resolve-url-loader@4.0.0 "name": "client",
+  "name": "client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
