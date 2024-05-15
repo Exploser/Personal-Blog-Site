@@ -15,6 +15,8 @@ const morgan = require('morgan');
 const compression = require('compression');
 const admin = require('firebase-admin');
 
+const nodemailer = require("nodemailer");
+
 // Initialize Firebase Admin with environment variable
 const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
 admin.initializeApp({
@@ -44,6 +46,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
+app.use(express.urlencoded({ extended: true }));
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
@@ -54,6 +57,8 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 app.use(compression());
+
+console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected successfully.'))
@@ -247,6 +252,41 @@ app.get('/post/:id', async (req, res) => {
     const postDoc = await PostModel.findById(id).populate('author');
     res.json(postDoc);
 });
+
+// Set up nodemailer transport
+const contactEmail = nodemailer.createTransport({
+    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
+
+// Email sending route
+app.post('/send-email', async (req, res) => {
+    const { firstName, lastName, email, message, phone } = req.body;
+    const name = `${firstName} ${lastName}`;
+    const mail = {
+        from: name,
+        to: process.env.EMAIL_USER,
+        subject: "Contact Form Submission - Portfolio",
+        text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+        html: `<p>Name: ${name}</p><p>Email: ${email}</p><p>Phone: ${phone}</p><p>Message: ${message}</p>`,
+    };
+
+    try {
+        await contactEmail.sendMail(mail);
+        res.status(200).json({ status: "Message Sent" });
+    } catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+app.get('/send-email', (req, res) => res.send('Hello World!'));
+
 
 if (process.env.API_PORT) {
     app.listen(process.env.API_PORT);
