@@ -9,3 +9,7 @@ firebase.*
 *.json
 
 */*/uploads
+
+node_modules
+
+

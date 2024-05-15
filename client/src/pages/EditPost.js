@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Editor from "../Editor";
 import { Navigate, useParams } from "react-router-dom";
 import 'react-quill/dist/quill.snow.css';
+import ReactGA from 'react-ga';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
@@ -13,6 +14,14 @@ export default function EditPost() {
   const [cover, setCover] = useState('');
   const [files, setFiles] = useState('');
   const [redirect, setRedirect] = useState(false);
+
+  ReactGA.initialize('G-NR6K22996F', {
+    debug: true,
+    titleCase: false,
+    gaOptions: {
+      userId: 123
+    }
+  });
 
   useEffect(() => {
     fetch(`${apiUrl}post/${id}`)
@@ -56,6 +65,10 @@ export default function EditPost() {
     if (response.ok) {
       setRedirect(true);
     }
+    ReactGA.event({
+      category: 'User',
+      action: 'Created an Account'
+    });
   }
 
   // Function to handle file selection
